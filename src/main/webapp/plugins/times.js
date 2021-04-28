@@ -1,43 +1,40 @@
 /**
- * Tags plugin.
+ * Times plugin.
  * 
- * - Set tags via dialog
- * - Toggle hidden tags
- * - Stateless filter
+ * - filter items based on start_date and end_date properties
  * 
  * TODO:
  * 
- * - Add hiddenTags to viewState of page
- * - Export to PDF ignores current tags
- * - Sync hiddenTags with removed tags
+ *
+ * Created by James Cumby May 2021 by modifying tags.js
  */
 Draw.loadPlugin(function(editorUi)
 {
 	var div = document.createElement('div');
 	
 	// Adds resource for action
-	mxResources.parse('hiddenTags=Hidden Tags');
+	mxResources.parse('hiddenDates=Hidden Dates');
 
 	// Adds action
-	editorUi.actions.addAction('hiddenTags...', function()
+	editorUi.actions.addAction('hiddenDates...', function()
 	{
-		if (editorUi.hiddenTagsWindow == null)
+		if (editorUi.hiddenDatesWindow == null)
 		{
-			editorUi.hiddenTagsWindow = new HiddenTagsWindow(editorUi, document.body.offsetWidth - 380, 120, 300, 240);
-			editorUi.hiddenTagsWindow.window.addListener('show', function()
+			editorUi.hiddenDatesWindow = new hiddenDatesWindow(editorUi, document.body.offsetWidth - 380, 120, 300, 240);
+			editorUi.hiddenDatesWindow.window.addListener('show', function()
 			{
-				editorUi.fireEvent(new mxEventObject('hiddenTags'));
+				editorUi.fireEvent(new mxEventObject('hiddenDates'));
 			});
-			editorUi.hiddenTagsWindow.window.addListener('hide', function()
+			editorUi.hiddenDatesWindow.window.addListener('hide', function()
 			{
-				editorUi.fireEvent(new mxEventObject('hiddenTags'));
+				editorUi.fireEvent(new mxEventObject('hiddenDates'));
 			});
-			editorUi.hiddenTagsWindow.window.setVisible(true);
-			editorUi.fireEvent(new mxEventObject('hiddenTags'));
+			editorUi.hiddenDatesWindow.window.setVisible(true);
+			editorUi.fireEvent(new mxEventObject('hiddenDates'));
 		}
 		else
 		{
-			editorUi.hiddenTagsWindow.window.setVisible(!editorUi.hiddenTagsWindow.window.isVisible());
+			editorUi.hiddenDatesWindow.window.setVisible(!editorUi.hiddenDatesWindow.window.isVisible());
 		}
 	});
 	
@@ -48,56 +45,82 @@ Draw.loadPlugin(function(editorUi)
 	{
 		oldFunct.apply(this, arguments);
 		
-		editorUi.menus.addMenuItems(menu, ['-', 'hiddenTags'], parent);
+		editorUi.menus.addMenuItems(menu, ['-', 'filterDate'], parent);
 	};
 
-	var HiddenTagsWindow = function(editorUi, x, y, w, h)
+	var hiddenDatesWindow = function(editorUi, x, y, w, h)
 	{
 		var graph = editorUi.editor.graph;
-		var propertyName = 'tags';
+		//var propertyName = 'tags';
 
 		var div = document.createElement('div');
 		div.style.overflow = 'hidden';
 		div.style.padding = '12px 8px 12px 8px';
 		div.style.height = 'auto';
 		
-		var searchInput = document.createElement('input');
-		searchInput.setAttribute('placeholder', 'Type in the tags and press Enter to add them');
-		searchInput.setAttribute('type', 'text');
-		searchInput.style.width = '100%';
-		searchInput.style.boxSizing = 'border-box';
-		searchInput.style.fontSize = '12px';
-		searchInput.style.borderRadius = '4px';
-		searchInput.style.padding = '4px';
-		searchInput.style.marginBottom = '8px';
-		div.appendChild(searchInput);
+		var startDate = document.createElement('startDate');
+		startDate.setAttribute('placeholder', 'Start Date (dd/mm/yyyy)');
+		startDate.setAttribute('type', 'text');
+		startDate.style.width = '100%';
+		startDate.style.boxSizing = 'border-box';
+		startDate.style.fontSize = '12px';
+		startDate.style.borderRadius = '4px';
+		startDate.style.padding = '4px';
+		startDate.style.marginBottom = '8px';
+		div.appendChild(startDate);
+		
+		var endDate = document.createElement('endDate');
+		endDate.setAttribute('placeholder', 'End Date (dd/mm/yyyy)');
+		endDate.setAttribute('type', 'text');
+		endDate.style.width = '100%';
+		endDate.style.boxSizing = 'border-box';
+		endDate.style.fontSize = '12px';
+		endDate.style.borderRadius = '4px';
+		endDate.style.padding = '4px';
+		endDate.style.marginBottom = '8px';
+		div.appendChild(endDate);
 
-		var filterInput = searchInput.cloneNode(true);
-		filterInput.setAttribute('placeholder', 'Filter tags');
-		div.appendChild(filterInput);
+		//var filterInput = searchInput.cloneNode(true);
+		//filterInput.setAttribute('placeholder', 'Filter tags');
+		//div.appendChild(filterInput);
 
-		var tagCloud = document.createElement('div');
-		tagCloud.style.position = 'relative';
-		tagCloud.style.fontSize = '12px';
-		tagCloud.style.height = 'auto';
-		div.appendChild(tagCloud);
+		//var tagCloud = document.createElement('div');
+		//tagCloud.style.position = 'relative';
+		//tagCloud.style.fontSize = '12px';
+		//tagCloud.style.height = 'auto';
+		//div.appendChild(tagCloud);
 
 		var graph = editorUi.editor.graph;
 		var lastValue = null;
 		
-		function getTagsForCell(cell)
+		function convertDate(date)
+		{ // Convert dd/mm/yyyy string to Date object
+			parts = date.split('/');
+			var dt = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+			return dt;
+		};
+		
+		function getDatesForCell(cell)
 		{
-			return graph.getAttributeForCell(cell, propertyName, '');
+			var dates = [];
+			var appl = convertDate(graph.getAttributeForCell(cell, 'application_date', ''));
+			var start = convertDate(graph.getAttributeForCell(cell, 'start_date', ''));
+			var end = convertDate(graph.getAttributeForCell(cell, 'end_date', ''));
+			dates = [appl,start,end]
+			return dates;
 		};
 
-		function getAllTagsForCells(cells)
+ 		function getAllDatesForCells(cells, type)
+		// Get all dates for all cells of type 'start', 'end' or 'application'
 		{
 			var tokens = [];
 			var temp = {};
 			
 			for (var i = 0; i < cells.length; i++)
 			{
-				var tags = getTagsForCell(cells[i]);
+				var dates = getDatesForCell(cells[i]);
+
+				
 
 				if (tags.length > 0)
 				{
@@ -119,7 +142,7 @@ Draw.loadPlugin(function(editorUi)
 			return tokens;
 		};
 		
-		function getCommonTagsForCells(cells)
+/* 		function getCommonTagsForCells(cells)
 		{
 			var commonTokens = null;
 			var validTags = [];
@@ -152,8 +175,8 @@ Draw.loadPlugin(function(editorUi)
 			}
 		
 			return validTags;
-		};
-		
+		}; */
+/* 		
 		function getLookup(tagList)
 		{
 			var lookup = {};
@@ -164,7 +187,7 @@ Draw.loadPlugin(function(editorUi)
 			}
 			
 			return lookup;
-		};
+		}; */
 		
 		function getAllTags()
 		{
@@ -204,7 +227,7 @@ Draw.loadPlugin(function(editorUi)
 			}
 		};
 		
-		var hiddenTags = {};
+		var hiddenDates = {};
 		var hiddenTagCount = 0;
 		var graphIsCellVisible = graph.isCellVisible;
 
@@ -212,12 +235,13 @@ Draw.loadPlugin(function(editorUi)
 		{
 			return graphIsCellVisible.apply(this, arguments) &&
 				(hiddenTagCount == 0 ||
-				!matchTags(getTagsForCell(cell), hiddenTags, hiddenTagCount));
+				!matchTags(getTagsForCell(cell), hiddenDates, hiddenTagCount));
 		};
 		
-		function setCellsVisibleForTag(tag, visible)
+		// Hide cells not in date range
+		function setCellsVisibleForDates(tag, visible)
 		{
-			var cells = graph.getCellsForTags([tag], null, propertyName, true);
+			var cells = graph.model.getDescendants(graph.model.getRoot());
 			
 			// Ignores layers for selection
 			var temp = [];
@@ -233,7 +257,7 @@ Draw.loadPlugin(function(editorUi)
 			graph.setCellsVisible(cells, visible);
 		};
 
-		function updateSelectedTags(tags, selected, selectedColor, filter)
+/* 		function updateSelectedTags(tags, selected, selectedColor, filter)
 		{
 			tagCloud.innerHTML = '';
 			
@@ -283,7 +307,7 @@ Draw.loadPlugin(function(editorUi)
 								}
 								else
 								{
-									hiddenTags[tag] = true;
+									hiddenDates[tag] = true;
 									hiddenTagCount++;
 									refreshUi();
 									
@@ -301,7 +325,7 @@ Draw.loadPlugin(function(editorUi)
 								}
 								else
 								{
-									delete hiddenTags[tag];
+									delete hiddenDates[tag];
 									hiddenTagCount--;
 									refreshUi();
 									
@@ -324,18 +348,18 @@ Draw.loadPlugin(function(editorUi)
 			{
 				mxUtils.write(tagCloud, 'No tags found');
 			}
-		};
+		}; */
 		
-		function updateTagCloud(tags)
+/* 		function updateTagCloud(tags)
 		{
-			updateSelectedTags(tags, hiddenTags, '#bb0000', filterInput.value);
-		};
+			updateSelectedTags(tags, hiddenDates, '#bb0000', filterInput.value);
+		}; */
 		
 		function refreshUi()
 		{
 			if (graph.isSelectionEmpty())
 			{
-				updateTagCloud(getAllTags(), hiddenTags);
+				updateTagCloud(getAllTags(), hiddenDates);
 				searchInput.style.display = 'none';
 				filterInput.style.display = '';
 			}
@@ -349,7 +373,7 @@ Draw.loadPlugin(function(editorUi)
 		
 		refreshUi();
 		
-		function addTagsToCells(cells, tagList)
+/* 		function addTagsToCells(cells, tagList)
 		{
 			if (cells.length > 0 && tagList.length > 0)
 			{
@@ -385,9 +409,9 @@ Draw.loadPlugin(function(editorUi)
 					graph.model.endUpdate();
 				}
 			}
-		};
+		}; */
 
-		function removeTagsFromCells(cells, tagList)
+/* 		function removeTagsFromCells(cells, tagList)
 		{
 			if (cells.length > 0 && tagList.length > 0)
 			{
@@ -427,7 +451,7 @@ Draw.loadPlugin(function(editorUi)
 					graph.model.endUpdate();
 				}
 			}
-		};
+		}; */
 		
 		graph.selectionModel.addListener(mxEvent.EVENT_CHANGE, function(sender, evt)
 		{
@@ -439,12 +463,12 @@ Draw.loadPlugin(function(editorUi)
 			refreshUi();
 		});
 
-		mxEvent.addListener(filterInput, 'keyup', function()
+		mxEvent.addListener(startDate, 'keyup', function()
 		{
 			updateTagCloud(getAllTags());
 		});
 		
-		mxEvent.addListener(searchInput, 'keyup', function(evt)
+		mxEvent.addListener(endDate, 'keyup', function(evt)
 		{
 			// Ctrl or Cmd keys
 			if (evt.keyCode == 13)
@@ -454,7 +478,7 @@ Draw.loadPlugin(function(editorUi)
 			}
 		});
 
-		this.window = new mxWindow(mxResources.get('hiddenTags'), div, x, y, w, null, true, true);
+		this.window = new mxWindow(mxResources.get('hiddenDates'), div, x, y, w, null, true, true);
 		this.window.destroyOnClose = false;
 		this.window.setMaximizable(false);
 		this.window.setResizable(true);
