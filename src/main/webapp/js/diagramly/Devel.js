@@ -10,67 +10,74 @@ if (!mxIsElectron && location.protocol !== 'http:')
 {
 	(function()
 	{
-		var csp = 'default-src \'self\'; ' +
-			// storage.googleapis.com is needed for workbox-service-worker
-			'script-src %script-src% \'self\' https://viewer.diagrams.net https://storage.googleapis.com ' +
-				'https://apis.google.com https://*.pusher.com https://code.jquery.com ' +
-				// Below are the SHAs of the two script blocks in index.html.
-				// These must be updated here and in the CDN after changes.
-				//----------------------------------------------------------//
-				//------------- Bootstrap script in index.html -------------//
-				//----------------------------------------------------------//
-				'\'sha256-5DtSB5mj34lxcEf+HFWbBLEF49xxJaKnWGDWa/utwQA=\' ' +
-				// Version 14.6.5
-				'\'sha256-8HtpzsH4zj5+RKfTWMxPmWJKBu0OYbn+WuPrLbVky+g=\' ' +
-				// Version 14.1.1
-				'\'sha256-gCA3yqbX5kV5cXQOyvSd4v54e8cOLCBlaKU4tuhJF3Y=\' ' +
-				// Version 14.0.1
-				'\'sha256-ZMnCMK9Jg5ijd0Viqw4KAFn39HeC1LrVwervb9uC7Mo=\' ' +
-				// Version 14.0.0
-				'\'sha256-KgVey3Yy0LCtaUZnD77KXAark2kZ3wS5HGa+tyAkR28=\' ' +
-				// Version 13.8.2
-				'\'sha256-1k6pyjDIKgd1KTCRcmDfV6Yc9vgQexHRTiO4zUBoKg8=\' ' +
-				// Version 13.8.1
-				'\'sha256-/fZb/J4FQmI/TwyxqJbvALWSyGVEvnTrlj4ZTzZNKzI=\' ' +
-				// Version 13.7.9
-				'\'sha256-P4E8pNUYsln6/EUZppjCCe8y8lelBYTfsSyLjjFCE5g=\' ' +
-				// Version 13.7.5
-				'\'sha256-+CrvFhadGyk1VjhHM/t3R88LNSEKManW3TGSZi9fmHQ=\' ' +
-				// Versions before 13.7.5
-				'\'sha256-JqdgAC+ydIDMtmQclZEqgbw94J4IeABIfXAxwEJGDJs=\' ' +
-				//---------------------------------------------------------//
-				//------------- App.main script in index.html -------------//
-				//---------------------------------------------------------//
-				// Version 13.8.2
-				'\'sha256-vS/MxlVD7nbY7AnV+0t1Ap338uF7vrcs7y23KjERhKc=\' ' +
-				// Version 13.7.5
-				'\'sha256-dIEi9UhRQPcyoE9/RPfkIPLe2mSS8oQzwabGMLAZzGE=\' ' +
-				// Versions before 13.7.5
-				'\'sha256-4Dg3/NrB8tLC7TUSCbrtUDWD/J6bSLka01GHn+qtNZ0=\' ' +
-				//---------------------------------------------------------//
-				'; ' +
-			'connect-src %connect-src% \'self\' https://*.draw.io https://*.diagrams.net ' +
-				'https://*.googleapis.com wss://*.pusher.com https://*.pusher.com ' +
-				'https://api.github.com https://raw.githubusercontent.com https://gitlab.com ' +
-				'https://graph.microsoft.com https://*.sharepoint.com  https://*.1drv.com ' +
-				'https://dl.dropboxusercontent.com ' +
-				'https://*.google.com https://fonts.gstatic.com https://fonts.googleapis.com; ' +
+		var hashes = 'default-src \'self\'; ' +
+			'script-src %script-src% \'self\' https://viewer.diagrams.net https://apis.google.com https://*.pusher.com ' +
+			// Below are the SHAs of the two script blocks in index.html.
+			// These must be updated here and in the CDN after changes.
+			// Note: Desktop app uses only the newest hashes (replace it in electron.js [The one in index.html needs to be changed only if the second script block changes])
+			//----------------------------------------------------------//
+			//------------- Bootstrap script in index.html -------------//
+			//----------------------------------------------------------//
+			// Version 21.7.0
+			'\'sha256-dLMFD7ijAw6AVaqecS7kbPcFFzkxQ+yeZSsKpOdLxps=\' ' +
+			// Version 21.6.7
+			'\'sha256-PDJOTCOfwIg8Ri7U2PH1pIpx+haCyKsJEbFxlW6hdSI=\' ' +
+			// Version 21.5.0
+			'\'sha256-6zAB96lsBZREqf0sT44BhH1T69sm7HrN34rpMOcWbNo=\' ' +
+			// Version 21.4.1
+			'\'sha256-3SkDBaLE+ouvAOfTmG2TGwmQ2EE9AT0F2YcHvZmEMeo=\' ' +
+			// Version 20.8.14
+			'\'sha256-vrEVJkYyBW9H4tt1lYZtK5fDowIeRwUgYZfFTT36YpE=\' ' +
+			// Version 20.8.12
+			'\'sha256-6g514VrT/cZFZltSaKxIVNFF46+MFaTSDTPB8WfYK+c=\' ' +
+			//---------------------------------------------------------//
+			//------------- App.main script in index.html -------------//
+			//---------------------------------------------------------//
+			// Version 13.8.2
+			'\'sha256-vS/MxlVD7nbY7AnV+0t1Ap338uF7vrcs7y23KjERhKc=\' ' +
+			//---------------------------------------------------------//
+			'; ';
+
+		var styleHashes = '\'sha256-pVoUz0B9cDvBP/6KP+5uOMqPh1c14hF0KFqSELqeyNQ=\' ' + // index.html
+			'\'sha256-D9Gy46rimBnLRtBqv9U464kXQ5oT5JvkurboVMjtN0Q=\' ' + // MinimalCss/Light
+			'\'sha256-C9BzsAi3ukZpBZzbdTpUNpxHfPR/+KJbeueKj1U6QGY=\' ' + // MinimalCss/Dark
+			'\'sha256-7kY8ozVqKLIIBwZ24dhdmZkM26PsOlZmEi72RhmZKoM=\' ' + // mxTooltipHandler.js
+			'\'sha256-kuk5TvxZ/Kwuobo4g6uasb1xRQwr1+nfa1A3YGePO7U=\' ' + // MathJax
+			'\'sha256-ByOXYIXIkfNC3flUR/HoxR4Ak0pjOEF1q8XmtuIa6po=\' ' + // purify.min.js
+			'\'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=\' ' + // spin.min.js
+			'\'sha256-nzHi23DROym7G011m6y0DyDd9mvQL2hSJ0Gy3g2T/5Q=\' ' + // dropins.js
+			'\'sha256-xjAW8oXqJlP0CWqxT9s80kgOtOjvENMmfnnfulL6p1A=\' ' + // gapi
+			'\'unsafe-hashes\'; '; // Required for hashes for style attribute
+		
+		var directives = 'connect-src %connect-src% \'self\' https://*.draw.io https://*.diagrams.net ' +
+			'https://*.googleapis.com wss://app.diagrams.net wss://*.pusher.com https://*.pusher.com ' +
+			'https://api.github.com https://raw.githubusercontent.com https://gitlab.com ' +
+			'https://graph.microsoft.com https://*.sharepoint.com  https://*.1drv.com https://api.onedrive.com ' +
+			'https://dl.dropboxusercontent.com https://api.openai.com ' +
+			'https://*.google.com https://fonts.gstatic.com https://fonts.googleapis.com; ' +
 			// font-src about: is required for MathJax HTML-CSS output with STIX
-			'img-src * data:; media-src * data:; font-src * about:; ' +
+			'img-src * data: blob:; media-src * data:; font-src * about:; ' +
 			// www.draw.io required for browser data migration to app.diagrams.net and
 			// viewer.diagrams.net required for iframe embed preview
 			'frame-src %frame-src% \'self\' https://viewer.diagrams.net https://www.draw.io https://*.google.com; ' +
-			'style-src %style-src% \'self\' \'unsafe-inline\' https://fonts.googleapis.com;'
-
+			'style-src %style-src% \'self\'  https://fonts.googleapis.com ' +
+			// Replaces unsafe-inline style-src with hashes with safe-style-src URL parameter
+			((urlParams['safe-style-src'] == '1') ? styleHashes : '\'unsafe-inline\'; ') +
+			'base-uri \'none\';' +
+			'child-src \'self\';' +
+			'object-src \'none\';';
+			
+		var csp = hashes + directives;
 		var devCsp = csp.
 			// Adds script tags and loads shapes with eval
-			replace(/%script-src%/g, 'https://www.dropbox.com https://api.trello.com https://devhost.jgraph.com \'unsafe-eval\'').
+			replace(/%script-src%/g, 'https://www.dropbox.com https://api.trello.com \'unsafe-eval\'').
 			// Adds Trello and Dropbox backend storage
 			replace(/%connect-src%/g, 'https://*.dropboxapi.com https://trello.com https://api.trello.com').
 			// Loads common.css from mxgraph
-			replace(/%style-src%/g, 'https://devhost.jgraph.com').
+			replace(/%style-src%/g, '').
 			replace(/%frame-src%/g, '').
 			replace(/  /g, ' ');
+
 		mxmeta(null, devCsp, 'Content-Security-Policy');
 
 		if (urlParams['print-csp'] == '1')
@@ -82,53 +89,54 @@ if (!mxIsElectron && location.protocol !== 'http:')
 					replace(/%style-src%/g, '').
 					replace(/  /g, ' ') + ' frame-ancestors \'self\' https://teams.microsoft.com;';
 			console.log('app.diagrams.net:', app_diagrams_net);
-			// TODO remove https://ajax.googleapis.com April 2022. It's old jquery domain
-			var ac_draw_io = csp.replace(/%script-src%/g, 'https://aui-cdn.atlassian.com https://connect-cdn.atl-paas.net https://ajax.googleapis.com https://cdnjs.cloudflare.com').
-					replace(/%frame-src%/g, 'https://www.lucidchart.com https://app.lucidchart.com').
+
+			var viewer_diagrams_net = hashes.replace(/%script-src%/g, 'https://www.dropbox.com https://api.trello.com https://app.diagrams.net') +
+				'connect-src *; ' +
+				'img-src * data: blob:; ' +
+				'media-src * data:; ' +
+				'font-src * about:; ' +
+				'style-src \'self\' https://fonts.googleapis.com \'unsafe-inline\'; ' +
+				'base-uri \'none\';' +
+				'object-src \'none\';' +
+				'worker-src https://viewer.diagrams.net/service-worker.js;'
+			console.log('viewer.diagrams.net:', viewer_diagrams_net);
+
+			var teams_diagrams_net = app_diagrams_net.replace(/ 'sha256-[^']+'/g, '') + 'worker-src https://app.diagrams.net/service-worker.js;';
+			console.log('teams.diagrams.net:', teams_diagrams_net);
+
+			var ac_draw_io = csp.replace(/%script-src%/g, 'https://aui-cdn.atlassian.com https://connect-cdn.atl-paas.net').
+					replace(/%frame-src%/g, 'https://www.lucidchart.com https://app.lucidchart.com https://lucid.app blob:').
 					replace(/%style-src%/g, 'https://aui-cdn.atlassian.com https://*.atlassian.net').
 					replace(/%connect-src%/g, '').
-					replace(/  /g, ' ');
+					replace(/  /g, ' ') +
+					'worker-src https://ac.draw.io/service-worker.js;';
 			console.log('ac.draw.io:', ac_draw_io);
-			var aj_draw_io = csp.replace(/%script-src%/g, 'https://connect-cdn.atl-paas.net').
-					replace(/%frame-src%/g, '').
+
+			var aj_draw_io = csp.replace(/%script-src%/g, 'https://aui-cdn.atlassian.com https://connect-cdn.atl-paas.net').
+					replace(/%frame-src%/g, 'blob:').
 					replace(/%style-src%/g, 'https://aui-cdn.atlassian.com https://*.atlassian.net').
-					replace(/%connect-src%/g, '').
-					replace(/  /g, ' ');
+					replace(/%connect-src%/g, 'https://api.atlassian.com https://api.media.atlassian.com').
+					replace(/  /g, ' ') +
+					'worker-src https://aj.draw.io/service-worker.js;';
 			console.log('aj.draw.io:', aj_draw_io);
+
 			console.log('import.diagrams.net:', 'default-src \'self\'; worker-src blob:; img-src \'self\' blob: data: https://www.lucidchart.com ' +
-					'https://app.lucidchart.com; style-src \'self\' \'unsafe-inline\'; frame-src https://www.lucidchart.com https://app.lucidchart.com;');
+					'https://app.lucidchart.com https://lucid.app; style-src \'self\' \'unsafe-inline\'; frame-src https://www.lucidchart.com https://app.lucidchart.com https://lucid.app;');
 			console.log('Development:', devCsp);
-			
-			console.log('Header Worker:', 'let securityHeaders =', JSON.stringify({
-				online: {
-					"Content-Security-Policy" : app_diagrams_net,
-					"Permissions-Policy" : "microphone=()"
-				},
-				teams: {
-					"Content-Security-Policy" : app_diagrams_net.replace(/ 'sha256-[^']+'/g, ''),
-					"Permissions-Policy" : "microphone=()"
-				},
-				jira: {
-					"Content-Security-Policy" : aj_draw_io,
-					"Permissions-Policy" : "microphone=()"
-				},
-				conf: {
-					"Content-Security-Policy" : ac_draw_io,
-					"Permissions-Policy" : "microphone=()"
-				}
-			}, null, 4));
+
+			console.log('Remember to add index.html new hashes to Desktop app (electron.js). In desktop, only newest hashes are needed.');
 		}
 	})();
 }
-			
+
 mxscript(drawDevUrl + 'js/cryptojs/aes.min.js');
 mxscript(drawDevUrl + 'js/spin/spin.min.js');
 mxscript(drawDevUrl + 'js/deflate/pako.min.js');
 mxscript(drawDevUrl + 'js/deflate/base64.js');
 mxscript(drawDevUrl + 'js/jscolor/jscolor.js');
-mxscript(drawDevUrl + 'js/sanitizer/sanitizer.min.js');
-mxscript(drawDevUrl + 'js/croppie/croppie.min.js');
+mxscript(drawDevUrl + 'js/sanitizer/purify.min.js');
 mxscript(drawDevUrl + 'js/rough/rough.min.js');
+mxscript(drawDevUrl + 'js/freehand/perfect-freehand.js');
 
 // Uses grapheditor from devhost
 mxscript(geBasePath +'/Editor.js');
@@ -178,6 +186,7 @@ mxscript(drawDevUrl + 'js/diagramly/sidebar/Sidebar-Flowchart.js');
 mxscript(drawDevUrl + 'js/diagramly/sidebar/Sidebar-FluidPower.js');
 mxscript(drawDevUrl + 'js/diagramly/sidebar/Sidebar-GCP.js');
 mxscript(drawDevUrl + 'js/diagramly/sidebar/Sidebar-GCP2.js');
+mxscript(drawDevUrl + 'js/diagramly/sidebar/Sidebar-GCPIcons.js');
 mxscript(drawDevUrl + 'js/diagramly/sidebar/Sidebar-Gmdl.js');
 mxscript(drawDevUrl + 'js/diagramly/sidebar/Sidebar-IBM.js');
 mxscript(drawDevUrl + 'js/diagramly/sidebar/Sidebar-Infographic.js');
@@ -217,6 +226,7 @@ mxscript(drawDevUrl + 'js/diagramly/Editor.js');
 mxscript(drawDevUrl + 'js/diagramly/EditorUi.js');
 mxscript(drawDevUrl + 'js/diagramly/DiffSync.js');
 mxscript(drawDevUrl + 'js/diagramly/Settings.js');
+mxscript(drawDevUrl + 'js/diagramly/DrawioFilePuller.js');
 mxscript(drawDevUrl + 'js/diagramly/DrawioFileSync.js');
 
 //Comments
@@ -255,6 +265,7 @@ mxscript(drawDevUrl + 'js/diagramly/Minimal.js');
 mxscript(drawDevUrl + 'js/diagramly/DistanceGuides.js');
 mxscript(drawDevUrl + 'js/diagramly/mxRuler.js');
 mxscript(drawDevUrl + 'js/diagramly/mxFreehand.js');
+mxscript(drawDevUrl + 'js/diagramly/P2PCollab.js');
 mxscript(drawDevUrl + 'js/diagramly/DevTools.js');
 
 // Vsdx/vssx support
@@ -267,9 +278,6 @@ mxscript(drawDevUrl + 'js/jszip/jszip.min.js');
 // GraphMl Import
 mxscript(drawDevUrl + 'js/diagramly/graphml/mxGraphMlCodec.js');
 
-// P2P Collab
-mxscript(drawDevUrl + 'js/diagramly/P2PCollab.js');
-
 // Org Chart Layout
 if (urlParams['orgChartDev'] == '1')
 {
@@ -278,3 +286,9 @@ if (urlParams['orgChartDev'] == '1')
 	mxscript(drawDevUrl + 'js/orgchart/OrgChart.Layout.min.js');
 	mxscript(drawDevUrl + 'js/orgchart/mxOrgChartLayout.js');
 }
+
+// Miro Import
+mxscript(drawDevUrl + 'js/diagramly/miro/MiroImporter.js');
+
+// Mermaid to draw.io converter
+mxscript(drawDevUrl + 'js/mermaid/mermaid2drawio.js');

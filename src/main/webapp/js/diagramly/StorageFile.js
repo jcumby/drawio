@@ -231,7 +231,7 @@ StorageFile.prototype.saveFile = function(title, revision, success, error)
 			{
 				var saveDone = mxUtils.bind(this, function()
 				{
-					this.setModified(false);
+					this.setModified(this.getShadowModified());
 					this.contentChanged();
 					
 					if (success != null)
@@ -240,6 +240,7 @@ StorageFile.prototype.saveFile = function(title, revision, success, error)
 					}
 		        });
 				
+				this.setShadowModified(false);
 				var data = this.getData();
 				
 				this.ui.setDatabaseItem(null, [{
@@ -254,7 +255,17 @@ StorageFile.prototype.saveFile = function(title, revision, success, error)
 					{
 						if (this.ui.database == null) //fallback to localstorage
 						{
-							this.ui.setLocalData(this.title, data, saveDone);
+							try
+							{
+								this.ui.setLocalData(this.title, data, saveDone);
+							}
+							catch (e)
+							{
+								if (error != null)
+								{
+									error(e);
+								}
+							}
 						}
 						else if (error != null)
 						{

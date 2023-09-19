@@ -32,10 +32,13 @@
 	<target name="app" depends="merge">
 		<delete file="${basedir}/.tmp0.js"/>
 		<echo file="${basedir}/.tmp0.js">
-			window.STENCIL_PATH = window.STENCIL_PATH || 'https://viewer.diagrams.net/stencils';
+			window.PROXY_URL = window.PROXY_URL || 'https://viewer.diagrams.net/proxy';
+			window.STYLE_PATH = window.STYLE_PATH || 'https://viewer.diagrams.net/styles';
 			window.SHAPES_PATH = window.SHAPES_PATH || 'https://viewer.diagrams.net/shapes';
-			window.mxBasePath = window.mxBasePath || 'https://viewer.diagrams.net/mxgraph/';
+			window.STENCIL_PATH = window.STENCIL_PATH || 'https://viewer.diagrams.net/stencils';
+			window.GRAPH_IMAGE_PATH  = window.GRAPH_IMAGE_PATH || 'https://viewer.diagrams.net/img';
 			window.mxImageBasePath = window.mxImageBasePath || 'https://viewer.diagrams.net/mxgraph/images';
+			window.mxBasePath = window.mxBasePath || 'https://viewer.diagrams.net/mxgraph/';
 			window.mxLoadStylesheets = window.mxLoadStylesheets || false;
 		</echo>
 
@@ -51,20 +54,9 @@
 			<filelist dir="${basedir}" files=".tmp1.xml"/>
 		</concat>
 		<echo file="${basedir}/Graph-Stylesheet.js" append="true">`).documentElement;</echo>
-
-		<delete file="${basedir}/.tmp1.js"/>
-		<copy file="${war.dir}/styles/dark-default.xml" tofile="${basedir}/.tmp1.xml" overwrite="true"/>
-		<replaceregexp file="${basedir}/.tmp1.xml" match="${line.separator}" flags="g" replace=""/>
-		<replaceregexp file="${basedir}/.tmp1.xml" match="\t" flags="g" replace=""/>
-		<replaceregexp file="${basedir}/.tmp1.xml" match="'" flags="g" replace="\\\\'" byline="true"/>
-
-		<echo file="${basedir}/Graph-Stylesheet.js" append="true">Graph.prototype.defaultThemes['darkTheme'] = mxUtils.parseXml(`</echo>
-		<concat destfile="${basedir}/Graph-Stylesheet.js" fixlastline="no" append="true">
-			<filelist dir="${basedir}" files=".tmp1.xml"/>
-		</concat>
-		<echo file="${basedir}/Graph-Stylesheet.js" append="true">`).documentElement;</echo>
-
-		<delete file="${basedir}/.tmp2.js"/>
+		<echo file="${basedir}/Graph-Stylesheet.js" append="true">Graph.prototype.defaultThemes['darkTheme'] = Graph.prototype.defaultThemes['default-style2'];</echo>
+		
+		<delete file="${basedir}/.tmp2.xml"/>
 		<copy file="${war.dir}/resources/dia.txt" tofile="${basedir}/.tmp2.xml" overwrite="true"/>
 		<replaceregexp file="${basedir}/.tmp2.xml" match="${line.separator}" flags="g" replace="\\\\n"/>
 		<replaceregexp file="${basedir}/.tmp2.xml" match="'" flags="g" replace="\\\\'" byline="true"/>
@@ -128,6 +120,7 @@
 				<file name="Sidebar-FluidPower.js" />
 				<file name="Sidebar-GCP.js" />
 				<file name="Sidebar-GCP2.js" />
+				<file name="Sidebar-GCPIcons.js" />
 				<file name="Sidebar-Gmdl.js" />
 				<file name="Sidebar-IBM.js" />
 				<file name="Sidebar-Infographic.js" />
@@ -215,7 +208,7 @@
 		<concat destfile="${basedir}/base-viewer.min.js" fixlastline="yes" append="no">
 			<filelist dir="${basedir}" files=".tmp0.min.js"/>
 			<filelist dir="${war.dir}/js/spin" files="spin.min.js"/>
-			<filelist dir="${war.dir}/js/sanitizer" files="sanitizer.min.js"/>
+			<filelist dir="${war.dir}/js/sanitizer" files="purify.min.js"/>
 			<filelist dir="${war.dir}/js/deflate" files="pako.min.js"/>
 			<filelist dir="${war.dir}/js/rough" files="rough.min.js"/>
 			<filelist dir="${basedir}" files="client.min.js,.tmp1.js"/>
@@ -306,6 +299,7 @@
 				<file name="EditorUi.js" />
 				<file name="DiffSync.js" />
 				<file name="Settings.js" />
+				<file name="DrawioFilePuller.js" />
 				<file name="DrawioFileSync.js" />
 				<file name="App.js" />
 				<file name="Menus.js" />
@@ -326,11 +320,11 @@
 			
 		<concat destfile="${basedir}/base.min.js" fixlastline="yes" append="no">
 			<filelist dir="${war.dir}/js/spin" files="spin.min.js"/>
-			<filelist dir="${war.dir}/js/sanitizer" files="sanitizer.min.js"/>
+			<filelist dir="${war.dir}/js/sanitizer" files="purify.min.js"/>
 			<filelist dir="${war.dir}/js/cryptojs" files="aes.min.js"/>
 			<filelist dir="${war.dir}/js/deflate" files="pako.min.js"/>
-			<filelist dir="${war.dir}/js/croppie" files="croppie.min.js"/>
 			<filelist dir="${war.dir}/js/rough" files="rough.min.js"/>
+			<filelist dir="${war.dir}/js/freehand" files="perfect-freehand.js"/>
 			<filelist dir="${basedir}" files="client.min.js,grapheditor.min.js,sidebar.min.js,.tmp1.js"/>
     	</concat>
 
@@ -389,6 +383,7 @@
 				<file name="EditorUi.js" />
 				<file name="DiffSync.js" />
 				<file name="Settings.js" />
+				<file name="DrawioFilePuller.js" />
 				<file name="DrawioFileSync.js" />
 			</sources>
 				
@@ -426,6 +421,10 @@
 				<file name="DriveComment.js" />
 			</sources>
 			
+			<sources dir="${war.dir}/js/onedrive">
+				<file name="mxODPicker.js" />
+			</sources>
+			
 			<sources dir="${war.dir}/js/diagramly">
 				<file name="App.js" />
 				<file name="Menus.js" />
@@ -435,16 +434,17 @@
 				<file name="DistanceGuides.js" />
 				<file name="mxRuler.js" />
 				<file name="mxFreehand.js" />
+				<file name="P2PCollab.js" />
 			</sources>
 		</jscomp>
 
 		<concat destfile="${war.dir}/js/app.min.js" fixlastline="yes" append="no">
 			<filelist dir="${war.dir}/js/spin" files="spin.min.js"/>
-			<filelist dir="${war.dir}/js/sanitizer" files="sanitizer.min.js"/>
+			<filelist dir="${war.dir}/js/sanitizer" files="purify.min.js"/>
 			<filelist dir="${war.dir}/js/cryptojs" files="aes.min.js"/>
 			<filelist dir="${war.dir}/js/deflate" files="pako.min.js"/>
-			<filelist dir="${war.dir}/js/croppie" files="croppie.min.js"/>
 			<filelist dir="${war.dir}/js/rough" files="rough.min.js"/>
+			<filelist dir="${war.dir}/js/freehand" files="perfect-freehand.js"/>
 			<filelist dir="${basedir}" files="client.min.js,grapheditor.min.js,sidebar.min.js,.tmp1.js"/>
     	</concat>
 
@@ -458,7 +458,48 @@
 		<delete file="${basedir}/.tmp1.js"/>
 	</target>
 
-	<target name="all" depends="app">
+	<target name="atlas" depends="app">
+		<concat destfile="${war.dir}/js/atlas-viewer.min.js" fixlastline="yes" append="no">
+			<file name="${basedir}/base-viewer.min.js" />
+			<file name="${war.dir}/js/orgchart.min.js" />
+    	</concat>
+
+		<jscomp compilationLevel="simple" debug="false" forceRecompile="true" output="${basedir}/.tmp0.js">
+			<sources dir="${war.dir}/connect/common/js">
+				<file name="mxReader.js" />
+			</sources>
+		</jscomp>
+
+	    <concat destfile="${war.dir}/js/atlas.min.js" fixlastline="yes" append="no">
+			<file name="${basedir}/base.min.js" />
+			<file name="${war.dir}/js/extensions.min.js" />
+			<file name="${basedir}/.tmp0.js" />
+    	</concat>
+
+		<delete file="${basedir}/.tmp0.js"/>
+	</target>
+
+	<target name="integrate" depends="atlas">
+		<copy file="${war.dir}/js/atlas.min.js" tofile="${war.dir}/js/integrate.min.js" overwrite="true"/>
+
+		<jscomp compilationLevel="simple" debug="false" forceRecompile="true" output="${basedir}/.tmp0.js">
+			<sources dir="${basedir}/../integrate">
+				<file name="Integrate.js" />
+			</sources>
+		</jscomp>
+		
+	    <concat destfile="${war.dir}/js/integrate.min.js" fixlastline="yes" append="yes">
+			<file name="${war.dir}/js/shapes-14-6-5.min.js" />
+    		<file name="${war.dir}/js/stencils.min.js" />
+    		<file name="${basedir}/.tmp0.js" />
+   		</concat>
+
+		<delete file="${basedir}/.tmp0.js"/>
+	</target>
+
+	<target name="all" depends="app, integrate">
+		<delete file="${war.dir}/js/atlas-viewer.min.js"/>
+		<delete file="${war.dir}/js/atlas.min.js"/>
 	</target>
 
 	<!-- ================== Stand-alone war creation ============================= -->
@@ -467,9 +508,9 @@
 		<fileset dir="${war.dir}/WEB-INF/lib" />
 	</path>
 
-	<target name="javac" depends="app" description="Java compilation">
+	<target name="javac" description="Java compilation">
 		<mkdir dir="${javac.dir}"/>
-		<javac includeantruntime="false" srcdir="${src.dir}" excludes="**/EmbedServlet2.java" destdir="${javac.dir}">
+		<javac includeantruntime="false" srcdir="${src.dir}" destdir="${javac.dir}">
 			<classpath refid="javac.class.path" />
 		</javac>
 		<copy todir="${javac.dir}" file="${src.dir}/log4j.properties" />
@@ -482,7 +523,7 @@
 		<delete file="${basedir}/base-viewer.min.js"/>
 	</target>
 	
-	<target name="war" depends="javac" description="Create the stand-alone war file">
+	<target name="war" depends="app, javac" description="Create the stand-alone war file">
 		<zip destfile="${build.dir}/${war.name}" basedir="${war.dir}" >
 		</zip>
 	</target>
