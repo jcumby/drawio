@@ -629,6 +629,7 @@
 		'## x is from -1 to 1 along the edge, y is orthogonal, and dx/dy are offsets in pixels.\n' +
 		'## An optional placeholders with the string value "source" or "target" can be specified\n' +
 		'## to replace placeholders in the additional label with data from the source or target.\n' +
+		'## An optional data object can be specified to define the metadata for the connector.\n' +
 		'## The target column may contain a comma-separated list of values.\n' +
 		'## Multiple connect entries are allowed.\n' +
 		'#\n' +
@@ -651,7 +652,7 @@
 		'#\n' +
 		'# width: auto\n' +
 		'#\n' +
-		'## Node height. Possible value is a number (in px), auto or an @ sign followed by a column\n' +
+		'## Node height. Possible value is a number (in px), auto, width or an @ sign followed by a column\n' +
 		'## name that contains the value for the height. Default is auto.\n' +
 		'#\n' +
 		'# height: auto\n' +
@@ -6138,6 +6139,7 @@
 							img.setAttribute('src', visible ? Editor.visibleImage : Editor.hiddenImage);
 							img.setAttribute('title', mxResources.get(visible ? 'hideIt' : 'show', [tag]));
 							mxUtils.setOpacity(img, visible ? 75 : 25);
+							img.className = 'geAdaptiveAsset';
 							img.style.verticalAlign = 'middle';
 							img.style.cursor = 'pointer';
 							img.style.width = '16px';
@@ -6175,6 +6177,7 @@
 							img.setAttribute('src', Editor.selectImage);
 							img.setAttribute('title', mxResources.get('select'));
 							mxUtils.setOpacity(img, visible ? 75 : 25);
+							img.className = 'geAdaptiveAsset';
 							img.style.verticalAlign = 'middle';
 							img.style.cursor = 'pointer';
 							img.style.width = '16px';
@@ -6249,6 +6252,7 @@
 									img.setAttribute('src', Editor.trashImage);
 									img.setAttribute('title', mxResources.get('removeIt', [tag]));
 									mxUtils.setOpacity(img, visible ? 75 : 25);
+									img.className = 'geAdaptiveAsset';
 									img.style.verticalAlign = 'middle';
 									img.style.cursor = 'pointer';
 									img.style.width = '16px';
@@ -8010,6 +8014,8 @@
 	mxStencilRegistry.libraries['pid2misc'] = [SHAPES_PATH + '/pid2/mxPidMisc.js', STENCIL_PATH + '/pid/misc.xml'];
 	mxStencilRegistry.libraries['pid2valves'] = [SHAPES_PATH + '/pid2/mxPidValves.js'];
 	mxStencilRegistry.libraries['pidFlowSensors'] = [STENCIL_PATH + '/pid/flow_sensors.xml'];
+	mxStencilRegistry.libraries['salesforce'] = [SHAPES_PATH + '/mxSalesforce.js', STENCIL_PATH + '/salesforce.xml'];
+	mxStencilRegistry.libraries['emoji'] = [SHAPES_PATH + '/emoji/mxEmoji.js'];
 
 	// Triggers dynamic loading for markers
 	mxMarker.getPackageForType = function(type)
@@ -8809,7 +8815,7 @@
 						pv.wnd.IMMEDIATE_PRINT = true;
 					}
 
-					doc.writeln('<script type="text/javascript" src="' + DRAWIO_BASE_URL + '/js/math-print.js"></script>');
+					doc.writeln('<script type="text/javascript" src="js/math-print.js"></script>');
 				}
 				
 				pv.closeDocument();

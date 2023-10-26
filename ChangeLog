@@ -1,3 +1,80 @@
+25-OCT-2023: 22.0.8
+
+- [conf cloud] Excludes old editor from duplicate macros fix [DID-9751]
+
+24-OCT-2023: 22.0.7
+
+- [conf cloud] Fixed math in the viewer [DID-9794]
+
+19-OCT-2023: 22.0.6
+
+- [conf cloud] Fixes Gliffy import hanging when import API fails [DID-9752]
+- [conf cloud] Adds support for importing short links with special characters [DID-9687]
+
+18-OCT-2023: 22.0.5
+
+- [conf cloud] Adds support for importing short links less than 6 characters [DID-9687]
+- [conf cloud] Fixes direct editing in blogposts [DID-9702]
+- [conf cloud] Fixes fullscreen (lightbox) view of diagrams in page templates [DID-9690]
+
+06-OCT-2023: 22.0.4
+
+- Adds Emoji shape support
+
+05-OCT-2023: 22.0.3
+
+- Fixes possible NPE in clonePages error handler
+- [vsdx] Stops using default theme when theme index not found [DID-9622]
+- Fixes tags dialog icons in dark mode [drawio-3910]
+
+03-OCT-2023: 22.0.2
+
+- Fixes new save dialog for SharePoint [drawio-3900]
+- Fixes copy/paste after dialog was shown [drawio-3903]
+
+02-OCT-2023: 22.0.1
+
+- Ignores selection for nested cells with part style
+- Adds salesforce icons [drawio-2793]
+
+28-SEP-2023: 22.0.0
+
+- Adds DRAWIO_SERVER_URL as an additional URL to DRAWIO_BASE_URL. BASE_URL used to indicate
+	the URL both the back-end and static code were delivered on. SERVER_URL now provides a 
+	way to delivery on one URL and server the back-end functions on a different URL. 
+	By default the server URL value is blank.
+- Fixes search for uncompressed shapes, result order
+- Fixes dialog stack order [drawio-3883]
+
+24-SEP-2023: 21.8.2
+
+- Confirm escape key for insert layout [drawio-3880]
+- Scrolls cell to visible after remove from group
+
+22-SEP-2023: 21.8.1
+
+- Attempt to fix NPE in GraphViewer
+- [conf cloud] Fixed custom templates loading in the editor [DID-9482]
+- [conf cloud] Prevent calling theme callback multiple times for the same event [DID-9505]
+- Fixes independent drag of cell with part=1 [DS-950]
+
+20-SEP-2023: 21.8.0
+
+- Ports Cache servlet to AWS Lambda [TI-11]
+- Fixes possible tab scrolling [drawio-desktop-1411]
+- Fixes default parent after root change [drawio-3868]
+- Adds inverse dark filter for iframes [drawio-3869]
+- Inserts overlapping connector on top [drawio-3853]
+- Fixes collapsed details viewer in FF [drawio-3292]
+- Adds spacing, alignment to default style [drawio-3307]
+- Fixes shape search on Android with Chromium [3321]
+- Adds width and height placeholders [drawio-3327]
+- Add allowed domain [DID-9475]
+- Adds length placeholder for edges [drawio-3327]
+- Fixes constrained collapsed resize [drawio-3274]
+- Adds edge meta data in CSV import [drawio-3324]
+- Adds support for same height as width in CSV import
+
 12-SEP-2023: 21.7.5
 
 - Adds CSS styles for Latex SVG export [drawio-3839]

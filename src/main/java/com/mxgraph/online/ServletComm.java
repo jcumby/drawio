@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public interface AuthServletComm extends AuthComm 
+public interface ServletComm extends AbsComm 
 {
     default String getCookieValue(String name, Object request_p)
 	{
@@ -50,6 +50,21 @@ public interface AuthServletComm extends AuthComm
 	default String getParameter(String name, Object request)
 	{
 		return ((HttpServletRequest) request).getParameter(name);
+	}
+
+	default String getPostParameter(String name, Object request)
+	{
+		return ((HttpServletRequest) request).getParameter(name);
+	}
+
+	default String getHeader(String name, Object request)
+	{
+		return ((HttpServletRequest) request).getHeader(name);
+	}
+
+	default String getQueryString(Object request)
+	{
+		return ((HttpServletRequest) request).getQueryString();
 	}
 
 	default String getServerName(Object request)

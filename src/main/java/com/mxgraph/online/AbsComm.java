@@ -5,7 +5,7 @@ package com.mxgraph.online;
 
 import java.io.IOException;
 
-public interface AuthComm
+public interface AbsComm
 {
     String getCookieValue(String name, Object request_p);
 	
@@ -14,6 +14,12 @@ public interface AuthComm
     void deleteCookie(String name, String cookiePath, Object response_p);
 
 	String getParameter(String name, Object request);
+
+	String getPostParameter(String name, Object request);
+
+	String getQueryString(Object request);
+
+	String getHeader(String name, Object request);
 
 	String getServerName(Object request);
 

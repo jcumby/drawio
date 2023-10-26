@@ -201,7 +201,6 @@ GraphViewer.prototype.init = function(container, xmlNode, graphConfig)
 				if (this.responsive && this.graph.dialect == mxConstants.DIALECT_SVG)
 				{
 					var root = this.graph.view.getDrawPane().ownerSVGElement;
-					var canvas = this.graph.view.getCanvas();
 						
 					if (this.graphConfig.border != null)
 					{
@@ -265,18 +264,24 @@ GraphViewer.prototype.init = function(container, xmlNode, graphConfig)
 					this.editor.defaultGraphOverflow = 'visible';
 				}
 				
-				//Extract graph model from html & svg formats
-				this.xmlNode = this.editor.extractGraphModel(this.xmlNode, true);
+				// Extract graph model from html & svg formats
+				var temp = this.editor.extractGraphModel(this.xmlNode, true);
 				
-				if (this.xmlNode != xmlNode)
+				if (temp != null && temp != xmlNode)
 				{
-					this.xml = mxUtils.getXml(this.xmlNode);
-					this.xmlDocument = this.xmlNode.ownerDocument;
+					try
+					{
+						this.xml = mxUtils.getXml(temp);
+						this.xmlNode = temp;
+						this.xmlDocument = temp.ownerDocument;
+					}
+					catch (e)
+					{
+						// ignore
+					}
 				}
 				
 				// Handles relative images
-				var self = this;
-				
 				this.graph.getImageFromBundles = function(key)
 				{
 					return self.getImageUrl(key);
@@ -295,7 +300,7 @@ GraphViewer.prototype.init = function(container, xmlNode, graphConfig)
 					
 					if (diagrams.length > 0)
 					{
-						//Find the page index if the pageId is provided
+						// Finds index for given page ID
 						if (this.pageId != null)
 						{
 							for (var i = 0; i < diagrams.length; i++)
@@ -309,8 +314,7 @@ GraphViewer.prototype.init = function(container, xmlNode, graphConfig)
 						}
 						
 						var graphGetGlobalVariable = this.graph.getGlobalVariable;
-						var self = this;
-						
+
 						this.graph.getGlobalVariable = function(name)
 						{
 							var diagram = diagrams[self.currentPage];
@@ -549,7 +553,9 @@ GraphViewer.prototype.init = function(container, xmlNode, graphConfig)
 				window.WebKitMutationObserver ||
 				window.MozMutationObserver;
 			
-			if (this.checkVisibleState && container.offsetWidth == 0 && typeof MutObs !== 'undefined')
+			if (this.checkVisibleState && container.offsetWidth == 0 &&
+				this.getAncestorDetails(container) == null &&
+				typeof MutObs !== 'undefined')
 			{
 				// Delayed rendering if inside hidden container and event available
 				var par = this.getObservableParent(container);
@@ -572,6 +578,24 @@ GraphViewer.prototype.init = function(container, xmlNode, graphConfig)
 			}
 		}
 	}
+};
+
+/**
+ * 
+ */
+GraphViewer.prototype.getAncestorDetails = function(container)
+{
+	while (container != null)
+	{
+		if (container.nodeName == 'DETAILS')
+		{
+			return container;
+		}
+		
+		container = container.parentNode;
+	}
+
+	return null;
 };
 
 /**
@@ -1576,7 +1600,14 @@ GraphViewer.prototype.addToolbar = function()
 			{
 				addButton(mxUtils.bind(this, function()
 				{
-					this.showLightbox();
+					try
+					{
+						this.showLightbox();
+					}
+					catch (e)
+					{
+						alert(e.message);
+					}
 				}), Editor.fullscreenImage, (mxResources.get('fullscreen') || 'Fullscreen'));
 			}
 		}
@@ -1842,7 +1873,14 @@ GraphViewer.prototype.addClickHandler = function(graph, ui)
 			(!mxEvent.isTouchEvent(evt) ||
 			this.toolbarItems.length == 0))
 		{
-			this.showLightbox();
+			try
+			{
+				this.showLightbox();
+			}
+			catch (e)
+			{
+				alert(e.message);
+			}
 		}
 	}));
 };

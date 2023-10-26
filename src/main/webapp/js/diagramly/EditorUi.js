@@ -174,7 +174,8 @@
 				if (EditorUi.enableLogging && urlParams['dev'] != '1' &&
 					message != EditorUi.lastErrorMessage && message.indexOf('extension:') < 0 &&
 					message.indexOf('ResizeObserver loop completed with undelivered notifications') < 0 &&
-					err.stack.indexOf('extension:') < 0 && err.stack.indexOf('<anonymous>:') < 0)
+					err.stack.indexOf('extension:') < 0 && err.stack.indexOf('<anonymous>:') < 0 &&
+					err.stack.indexOf('/math/es5/') < 0)
 				{
 					EditorUi.lastErrorMessage = message;
 
@@ -3735,18 +3736,25 @@
 				{
 					var cells = graph.getSelectionCells();
 					var bounds = graph.view.getBounds(cells);
-					
-					var s = graph.view.scale;
-					
-					bounds.x /= s;
-					bounds.y /= s;
-					bounds.width /= s;
-					bounds.height /= s;
-					
-					bounds.x -= graph.view.translate.x;
-					bounds.y -= graph.view.translate.y;
-					
-					addCells(cells, bounds);
+
+					if (bounds != null && bounds.width > 0 && bounds.height > 0)
+					{
+						var s = graph.view.scale;
+						
+						bounds.x /= s;
+						bounds.y /= s;
+						bounds.width /= s;
+						bounds.height /= s;
+						
+						bounds.x -= graph.view.translate.x;
+						bounds.y -= graph.view.translate.y;
+						
+						addCells(cells, bounds);
+					}
+					else
+					{
+						this.showError(mxResources.get('error'), mxResources.get('invalidSel'), mxResources.get('ok'));
+					}
 				}
 				else if (graph.getRubberband().isActive())
 				{
@@ -4033,32 +4041,43 @@
 	{
 		for (var i = 0; i < imgs.length; i++)
 		{
-			var img = imgs[i];
-			var data = img.data;
+			try
+			{
+				var img = imgs[i];
+				var data = img.data;
+				
+				if (data != null)
+				{
+					data = this.convertDataUri(data);
+					var s = 'shape=image;verticalLabelPosition=bottom;verticalAlign=top;imageAspect=0;';
+					
+					if (img.aspect == 'fixed')
+					{
+						s += 'aspect=fixed;'
+					}
+					
+					content.appendChild(this.sidebar.createVertexTemplate(s + 'image=' +
+						data, img.w, img.h, '', img.title || '', false, null, true));
+				}
+				else if (img.xml != null)
+				{
+					var cells = this.stringToCells((img.xml.charAt(0) == '<') ?
+						img.xml : Graph.decompress(img.xml));
 
-			if (data != null)
-			{
-				data = this.convertDataUri(data);
-				var s = 'shape=image;verticalLabelPosition=bottom;verticalAlign=top;imageAspect=0;';
-				
-				if (img.aspect == 'fixed')
-				{
-					s += 'aspect=fixed;'
+					if (cells.length > 0)
+					{
+						content.appendChild(this.sidebar.createVertexTemplateFromCells(
+							cells, img.w, img.h, img.title || '', true, null, true));
+					}
 				}
-				
-				content.appendChild(this.sidebar.createVertexTemplate(s + 'image=' +
-					data, img.w, img.h, '', img.title || '', false, null, true));
 			}
-			else if (img.xml != null)
+			catch (e)
 			{
-				var cells = this.stringToCells((img.xml.charAt(0) == '<') ?
-					img.xml : Graph.decompress(img.xml));
-				
-				if (cells.length > 0)
-				{
-					content.appendChild(this.sidebar.createVertexTemplateFromCells(
-						cells, img.w, img.h, img.title || '', true, null, true));
-				}
+				var elt = this.sidebar.createVertexTemplateFromCells(null,
+					img.w, img.h, mxResources.get('error') + ': ' +
+					e.message, true, null, true);
+				elt.style.backgroundImage = 'url(' + Editor.svgBrokenImage.src + ')';
+				content.appendChild(elt);
 			}
 		}
 	};
@@ -8350,7 +8369,7 @@
 					// EditorUi.logEvent({category: 'OPENAI-DIAGRAM',
 					// 	action: 'generateOpenAiMermaidDiagram',
 					// 	label: prompt});
-					var url = 'https://www.draw.io/generate/v1';
+					var url = 'https://www.draw.io/generate/v2';
 
 					var req = new mxXmlRequest(url, prompt, 'POST');
 					
@@ -8371,8 +8390,7 @@
 							{
 								this.tryAndHandle(mxUtils.bind(this, function()
 								{
-									var response = mxUtils.trim(req.getText());
-									var result = this.extractMermaidDeclaration(response);
+									var result = mxUtils.trim(req.getText());
 									
 									this.generateMermaidImage(result, null, mxUtils.bind(this, function(data, w, h)
 									{
@@ -8381,8 +8399,7 @@
 											if (timeout.clear())
 											{
 												EditorUi.debug('EditorUi.generateOpenAiMermaidDiagram',
-													'\nprompt:', prompt, '\nresponse:', response,
-													'\nresult:', result);
+													'\nprompt:', prompt, '\nresult:', result);
 												
 												this.spinner.stop();
 												success(result, data, w, h);
@@ -8429,107 +8446,7 @@
 
 		fn();
 	};
-	
-	/**
-	 * Generates a Mermaid image.
-	 */
-	EditorUi.prototype.extractMermaidMindmap = function(lines)
-	{
-		if (lines[1].indexOf('orientation') > 0)
-		{
-			lines.splice(1, 1);
-		}
 
-		while (lines.length > 1 && lines[1] == '')
-		{
-			lines.splice(1, 1);
-		}
-
-		var newLines = [];
-
-		// Removes dashes in entries
-		for (var i = 2; i < lines.length; i++)
-		{
-			var temp = mxUtils.trim(lines[i]);
-
-			if (temp != '[' && temp != ']' &&
-				temp.substring(0, 2) != '%%' &&
-				temp.substring(0, 2) != '##')
-			{
-				temp = lines[i].replace(/[-|>]/g, ' ')
-				
-				if (mxUtils.trim(temp) != '' &&
-					temp.charAt(0) == ' ')
-				{
-					newLines.push(temp);
-				}
-			}
-		}
-
-		// Removes indentiation for root element
-		return 'mindmap\nroot((' + mxUtils.trim(lines[1]) +
-			'))\n' + newLines.join('\n');
-	};
-
-	/**
-	 * Generates a Mermaid image.
-	 */
-	EditorUi.prototype.extractMermaidDeclaration = function(value)
-	{
-		// Removes occasional "o" on first line in response
-		if (value.substring(0, 3) == 'o\n\n')
-		{
-			value = value.substring(3);
-		}
-
-		// Various formats supported
-		var tokens = value.split('```');
-		tokens = (tokens.length > 1) ? tokens : value.split('<pre>');
-		tokens = (tokens.length > 1) ? tokens : value.split('~~~');
-		tokens = (tokens.length > 1) ? tokens : value.split('%%');
-		tokens = (tokens.length > 1) ? tokens : value.split('(Begins)');
-		
-		var text = mxUtils.trim((tokens.length <= 1) ? value : tokens[1]);
-		var lines = text.split('\n');
-
-		// Removes occasional mermaid tag or other text on first line
-		if ((lines.length > 0 && mxUtils.trim(lines[0]) == 'mermaid') ||
-			(lines.length > 1 && mxUtils.indexOf(
-				EditorUi.mermaidDiagramTypes, lines[1]) >= 0))
-		{
-			lines.shift();
-			text = mxUtils.trim(lines.join('\n'));
-			lines = text.split('\n');
-		}
-
-		// Validates diagram type on first line
-		var type = lines[0].split(' ')[0].replace(/:$/, '');
-
-		try
-		{
-			if (type == 'mindmap' && lines.length > 2)
-			{
-				text = this.extractMermaidMindmap(lines);
-			}
-		}
-		catch (e)
-		{
-			// ignore
-		}
-
-		if (type.charAt(0) != '@' && mxUtils.indexOf(
-			EditorUi.mermaidDiagramTypes, type) < 0)
-		{
-			text = 'classDiagram\n' + text;
-		}
-
-		EditorUi.debug('EditorUi.extractMermaidDeclaration',
-			'\nlines:', lines, '\ntype:', type,
-			'\nvalue:', value, '\ntext:', text);
-
-		return text;
-	};
-		
 	/**
 	 * Removes all lines starting with %%.
 	 */
@@ -12863,7 +12780,8 @@
 	
 				var initPicker = mxUtils.bind(this, function(force)
 				{
-					if (force || document.body.contains(picker))
+					if (force || (document.body != null &&
+						document.body.contains(picker)))
 					{
 						function addKey(elt, key, kx, ky)
 						{
@@ -17383,8 +17301,7 @@
 					}
 					else
 					{
-						mxscript(DRAWIO_BASE_URL + '/js/orgchart.min.js',
-							onload, null, null, null, onerror);
+						mxscript('js/orgchart.min.js', onload, null, null, null, onerror);
 					}
 				}
 			}
@@ -17820,15 +17737,16 @@
 							}
 
 							var heightValue = (height.charAt(0) == '@') ? cell.getAttribute(height.substring(1)) : null;
-
-							if (heightValue != null && heightValue != 'auto')
+							
+							if (heightValue != null && heightValue != 'auto' && height != 'width')
 							{
 								cell.geometry.height = parseFloat(heightValue);
 							}
 							else
 							{
 								cell.geometry.height = (height == 'auto' || heightValue == 'auto') ?
-									size.height + padding : parseFloat(height);
+									size.height + padding : (height == 'width' ?
+										cell.geometry.width : parseFloat(height));
 							}
 							
 							y += cell.geometry.height + nodespacing;
@@ -17975,6 +17893,15 @@
 													}
 								
 													edgeCell.insert(el);
+												}
+											}
+
+											// Adds edge metadata
+											if (edge.data != null)
+											{
+												for (var key in edge.data)
+												{
+													graph.setAttributeForCell(edgeCell, key, edge.data[key]);
 												}
 											}
 											

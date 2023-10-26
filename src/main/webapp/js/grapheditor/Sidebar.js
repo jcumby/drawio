@@ -758,7 +758,8 @@ Sidebar.prototype.addEntries = function(images)
 			{
 				this.addEntry(tags, mxUtils.bind(this, function()
 				{
-					var cells = this.editorUi.stringToCells(Graph.decompress(img.xml));
+					var cells = this.editorUi.stringToCells((img.xml.charAt(0) == '<') ?
+						img.xml : Graph.decompress(img.xml));
 
 					return this.createVertexTemplateFromCells(
 						cells, img.w, img.h, img.title || '', true, false, true);
@@ -862,12 +863,18 @@ Sidebar.prototype.searchEntries = function(searchTerms, count, page, success, er
 
 			if (normalized.length > 0)
 			{
-				var entry = this.taglist[normalized];
+				// Moves exact matches to start of array
+				var found = this.taglist[tmp[i]];
+				var arr = (found != null) ? found.entries.slice() : [];
+
+				// Adds results for normalized search term
+				found = this.taglist[normalized];
+				arr = (found != null) ? arr.concat(found.entries) : arr;
+
 				var tmpDict = new mxDictionary();
 				
-				if (entry != null)
+				if (arr.length > 0)
 				{
-					var arr = entry.entries;
 					results = [];
 
 					for (var j = 0; j < arr.length; j++)
@@ -875,7 +882,8 @@ Sidebar.prototype.searchEntries = function(searchTerms, count, page, success, er
 						var entry = arr[j];
 	
 						// NOTE Array does not contain duplicates
-						if ((index == 0) == (dict.get(entry) == null))
+						if (((index == 0) ==(dict.get(entry) == null)) &&
+							tmpDict.get(entry) == null)
 						{
 							tmpDict.put(entry, entry);
 							results.push(entry);
@@ -1048,17 +1056,22 @@ Sidebar.prototype.addSearchPalette = function(expand)
 			child = next;
 		}
 	});
+
+	function resetSearch()
+	{
+		cross.setAttribute('src', Sidebar.prototype.searchImage);
+		cross.setAttribute('title', mxResources.get('search'));
+		button.style.display = 'none';
+		input.value = '';
+		searchTerm = '';
+		clearDiv();
+	};
 		
 	mxEvent.addListener(cross, 'click', function()
 	{
 		if (cross.getAttribute('src') == Dialog.prototype.closeImage)
 		{
-			cross.setAttribute('src', Sidebar.prototype.searchImage);
-			cross.setAttribute('title', mxResources.get('search'));
-			button.style.display = 'none';
-			input.value = '';
-			searchTerm = '';
-			clearDiv();
+			resetSearch();
 		}
 
 		input.focus();
@@ -1126,7 +1139,8 @@ Sidebar.prototype.addSearchPalette = function(expand)
 										// Avoids duplicates in results
 										if (hash[elt.innerHTML] == null)
 										{
-											hash[elt.innerHTML] = (result.parentLibraries != null) ? result.parentLibraries.slice() : [];
+											hash[elt.innerHTML] = (result.parentLibraries != null) ?
+												result.parentLibraries.slice() : [];
 											div.appendChild(elt);
 										}
 										else if (result.parentLibraries != null)
@@ -1149,7 +1163,18 @@ Sidebar.prototype.addSearchPalette = function(expand)
 									}
 									catch (e)
 									{
-										// ignore
+										if (urlParams['test'] == '1')
+										{
+											if (window.console != null && !EditorUi.isElectronApp)
+											{
+												console.error(e);
+											}
+											else
+											{
+												mxLog.show();
+												mxLog.debug(e.stack);
+											}
+										}
 									}
 								}))(results[i]);
 							}
@@ -1201,6 +1226,10 @@ Sidebar.prototype.addSearchPalette = function(expand)
 		{
 			find();
 			mxEvent.consume(evt);
+		}
+		else if (evt.keyCode == 27 /* Escape */)
+		{
+			resetSearch();
 		}
 	}));
 
@@ -2302,48 +2331,51 @@ Sidebar.prototype.createItem = function(cells, title, showLabel, showTitle, widt
 		mxEvent.consume(evt);
 	});
 	
-	// Applies default styles
-	var originalCells = cells;
-	cells = this.graph.cloneCells(cells);
-	this.editorUi.insertHandler(originalCells, null, this.graph.model,
-		this.editorUi.editor.graph.defaultVertexStyle,
-		this.editorUi.editor.graph.defaultEdgeStyle,
-		true, true);
-
-	if (icon != null)
-	{
-		elt.style.backgroundImage = 'url(' + icon + ')';
-		elt.style.backgroundRepeat = 'no-repeat';
-		elt.style.backgroundPosition = 'center';
-		elt.style.backgroundSize = '24px 24px';
-	}
-	else
-	{
-		this.createThumb(originalCells, thumbWidth, thumbHeight,
-			elt, title, showLabel, showTitle, width, height);
-	}
-	
 	var bounds = new mxRectangle(0, 0, width, height);
 	
-	if (cells.length > 1 || cells[0].vertex)
+	// Applies default styles
+	if (cells != null && cells.length > 0)
 	{
-		var ds = this.createDragSource(elt, this.createDropHandler(cells, true, allowCellsInserted,
-			bounds, startEditing, sourceCell), this.createDragPreview(width, height),
-			cells, bounds, startEditing);
-		this.addClickHandler(elt, ds, cells, clickFn, startEditing);
-	
-		// Uses guides for vertices only if enabled in graph
-		ds.isGuidesEnabled = mxUtils.bind(this, function()
+		var originalCells = cells;
+		cells = this.graph.cloneCells(cells);
+		this.editorUi.insertHandler(originalCells, null, this.graph.model,
+			this.editorUi.editor.graph.defaultVertexStyle,
+			this.editorUi.editor.graph.defaultEdgeStyle,
+			true, true);
+
+		if (icon != null)
 		{
-			return this.editorUi.editor.graph.graphHandler.guidesEnabled;
-		});
-	}
-	else if (cells[0] != null && cells[0].edge)
-	{
-		var ds = this.createDragSource(elt, this.createDropHandler(cells, false, allowCellsInserted,
-			bounds, startEditing, sourceCell), this.createDragPreview(width, height),
-			cells, bounds, startEditing);
-		this.addClickHandler(elt, ds, cells, clickFn);
+			elt.style.backgroundImage = 'url(' + icon + ')';
+			elt.style.backgroundRepeat = 'no-repeat';
+			elt.style.backgroundPosition = 'center';
+			elt.style.backgroundSize = '24px 24px';
+		}
+		else
+		{
+			this.createThumb(originalCells, thumbWidth, thumbHeight,
+				elt, title, showLabel, showTitle, width, height);
+		}
+		
+		if (cells.length > 1 || cells[0].vertex)
+		{
+			var ds = this.createDragSource(elt, this.createDropHandler(cells, true, allowCellsInserted,
+				bounds, startEditing, sourceCell), this.createDragPreview(width, height),
+				cells, bounds, startEditing);
+			this.addClickHandler(elt, ds, cells, clickFn, startEditing);
+		
+			// Uses guides for vertices only if enabled in graph
+			ds.isGuidesEnabled = mxUtils.bind(this, function()
+			{
+				return this.editorUi.editor.graph.graphHandler.guidesEnabled;
+			});
+		}
+		else if (cells[0] != null && cells[0].edge)
+		{
+			var ds = this.createDragSource(elt, this.createDropHandler(cells, false, allowCellsInserted,
+				bounds, startEditing, sourceCell), this.createDragPreview(width, height),
+				cells, bounds, startEditing);
+			this.addClickHandler(elt, ds, cells, clickFn);
+		}
 	}
 	
 	// Shows a tooltip with the rendered cell

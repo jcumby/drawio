@@ -257,7 +257,7 @@ App.DROPBOX_APPKEY = window.DRAWIO_DROPBOX_ID;
 /**
  * Sets URL to load the Dropbox SDK from
  */
-App.DROPBOX_URL = window.DRAWIO_BASE_URL + '/js/dropbox/Dropbox-sdk.min.js';
+App.DROPBOX_URL = 'js/dropbox/Dropbox-sdk.min.js';
 
 /**
  * Sets URL to load the Dropbox dropins JS from.
@@ -268,7 +268,7 @@ App.DROPINS_URL = 'https://www.dropbox.com/static/api/2/dropins.js';
  * OneDrive Client JS (file/folder picker). This is a slightly modified version to allow using accessTokens
  * But it doesn't work for IE11, so we fallback to the original one
  */
-App.ONEDRIVE_URL = mxClient.IS_IE11? 'https://js.live.net/v7.2/OneDrive.js' : window.DRAWIO_BASE_URL + '/js/onedrive/OneDrive.js';
+App.ONEDRIVE_URL = mxClient.IS_IE11? 'https://js.live.net/v7.2/OneDrive.js' : 'js/onedrive/OneDrive.js';
 
 /**
  * Trello URL
@@ -278,7 +278,7 @@ App.TRELLO_URL = 'https://api.trello.com/1/client.js';
 /**
  * Trello JQuery dependency
  */
-App.TRELLO_JQUERY_URL = window.DRAWIO_BASE_URL + '/js/jquery/jquery-3.6.0.min.js';
+App.TRELLO_JQUERY_URL = 'js/jquery/jquery-3.6.0.min.js';
 
 /**
  * Specifies the key for the pusher project.
@@ -298,7 +298,7 @@ App.PUSHER_URL = 'https://js.pusher.com/7.0.3/pusher.min.js';
 /**
  * SimplePeer library 
  */
- App.SIMPLE_PEER_URL = window.DRAWIO_BASE_URL + '/js/simplepeer/simplepeer9.10.0.min.js';
+App.SIMPLE_PEER_URL = 'js/simplepeer/simplepeer9.10.0.min.js';
 
 /**
  * Google APIs to load. The realtime API is needed to notify collaborators of conversion
@@ -1037,7 +1037,7 @@ App.main = function(callback, createUi)
 						 */
 						if (urlParams['chrome'] != '0' && urlParams['test'] == '1')
 						{
-							EditorUi.debug('App.start', [ui, (new Date().getTime() - t0.getTime()) + 'ms']);
+							EditorUi.debug('App.start', ['v' + EditorUi.VERSION, ui, (new Date().getTime() - t0.getTime()) + 'ms']);
 							
 							if (urlParams['export'] != null)
 							{
@@ -1994,17 +1994,6 @@ App.prototype.getPusher = function()
 	}
 	
 	return this.pusher;
-};
-
-/**
- * Shows a footer to download the desktop version once per session.
- */
-App.prototype.showNameChangeBanner = function()
-{
-	this.showBanner('DiagramsFooter', 'draw.io is now diagrams.net', mxUtils.bind(this, function()
-	{
-		this.openLink('https://www.drawio.com/blog/move-diagrams-net');
-	}));
 };
 
 /**
@@ -3127,13 +3116,6 @@ App.prototype.start = function()
 						}
 					}));
 				}
-
-				if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp && !this.isOfflineApp() &&
-					urlParams['open'] == null && /www\.draw\.io$/.test(window.location.hostname) &&
-					(!this.editor.chromeless || this.editor.editable))
-				{
-					this.showNameChangeBanner();
-				}
 			}
 			catch (e)
 			{
@@ -3314,7 +3296,6 @@ App.prototype.start = function()
 								this.getServiceName() == 'draw.io' && (id == null || id.length == 0) &&
 								!this.editor.isChromelessView())
 							{
-								
 								this.checkDrafts();
 							}
 							else if (id != null && id.length > 0)
